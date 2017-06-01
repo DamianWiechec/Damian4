@@ -2,8 +2,18 @@ import java.util.TimerTask;
 
 public class SimTask extends TimerTask
 {
-    public void run()
-    {
+    private SimEngine a;
+    public SpringApplet b;
+    private double t;
 
+    SimTask(SimEngine E, SpringApplet S, double time) {
+        b = S;
+        a = E;
+        t = time; }
+
+    @Override public void run()
+    {
+        a.timeStep(t);
+        b.repaint();
     }
 }

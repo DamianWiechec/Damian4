@@ -1,101 +1,108 @@
-import javax.swing.JApplet;
+import java.applet.*;
 import java.awt.*;
 import java.util.Timer;
-import java.util.Vector;
-import static java.lang.Math.sqrt;
+import java.util.Date;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 
-public class SpringApplet extends JApplet
-{
-    private static final long serialVersionUID = 1L;
-    int tMS = 1;
-    double tSEC = 0.01;
-    SimEngine sEng;
-    SimTask sTask;
-    Timer tim;
-    Graphics bufferGraphics;
-    Image offscreen;
+public class SpringApplet extends Applet implements MouseListener, MouseMotionListener, ActionListener{
+    private SimEngine simEngine;
+    private SimTask simTask;
+    private Timer t;
+    boolean mysz;
+    double newx, newy;
+    TextField masa, sprezystosc, tlumienie, dlugoscSwobodna, grawitacja;
+    Button reset; Date currentDate = new Date();
 
-    double sprezyna;
-
-    @Override public void init()
-    {
-        this.setSize(800,480);
-        setBackground(Color.white);
-        offscreen = createImage(800,480);
-        bufferGraphics = offscreen.getGraphics();
-
-        sEng = new SimEngine(3, 0.5, 0.1, 100, 60, 50, 10);
-        sTask = new SimTask(sEng, this, tSEC);
-        tim = new Timer();
-        tim.scheduleAtFixedRate(sTask, 1000, tMS);
+    public void init() {
+        currentDate.setTime(0);
+        mysz = false;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        Vector2D y0 = new Vector2D(400, 70);
+        Vector2D y = new Vector2D(400, 100);
+        Vector2D v = new Vector2D(0, 0);
+        simEngine = new SimEngine(15, 5, 1, 40, 10, y, v, y0);
+        t = new Timer();
+        simTask = new SimTask(simEngine, this, 0.05);
+        t.scheduleAtFixedRate(simTask, currentDate.getTime(), 5);
+        setLayout(null); reset = new Button ( "reset " );
+        masa = new TextField("10");
+        sprezystosc = new TextField("9");
+        tlumienie = new TextField("10");
+        dlugoscSwobodna = new TextField("40");
+        grawitacja = new TextField("9.81");
+        reset.setBounds(650, 20, 100, 30);
+        dlugoscSwobodna.setBounds(20, 20, 100, 25);
+        sprezystosc.setBounds(140, 20, 100, 25);
+        tlumienie.setBounds(260, 20, 100, 25);
+        masa.setBounds(380, 20, 100, 25);
+        grawitacja.setBounds(500, 20, 100, 25);
+        add(masa);
+        add(sprezystosc);
+        add(tlumienie);
+        add(dlugoscSwobodna);
+        add(grawitacja);
+        add(reset);
+        reset.addActionListener(this);
     }
-    @Override public void paint(Graphics g) {
-        bufferGraphics.setColor(Color.lightGray);
-        bufferGraphics.fillRect(0, 0, 800, 480);
-        bufferGraphics.setColor(Color.black);
-        bufferGraphics.drawLine(0, 50, 800, 50);
-        for (int i = 0; i < 800; i += 20) {
-            bufferGraphics.drawLine(i, 50, i + 20, 30);
-        }
-        bufferGraphics.setColor(Color.gray);
-        for (int i = 0; i < 800; i += 20) {
-            bufferGraphics.drawLine(i, 51, i, 480);
-            bufferGraphics.drawLine(0, i + 70, 800, i + 70);
-        }
-        bufferGraphics.setColor(Color.black);
-        bufferGraphics.drawLine((int) sEng.x0.x, (int) sEng.x0.y, (int) sEng.x0.x, (int) sEng.x0.y + 5);
-        bufferGraphics.drawLine((int) sEng.x1.x, (int) sEng.x1.y - 5, (int) sEng.x1.x, (int) sEng.x1.y);
-        sprezyna = ((sEng.x1.y - 60) / 16);
-        bufferGraphics.drawLine((int) sEng.x0.x, (int) sEng.x0.y + 5, (int) sEng.x0.x + 20, (int) (sEng.x0.y + 5 + sprezyna));
-        bufferGraphics.drawLine((int) sEng.x0.x, (int) (sEng.x0.y + 5 + (16) * sprezyna), (int) sEng.x0.x + 20, (int) (sEng.x0.y + 5 + (15) * sprezyna));
-
-        for (int i = 0; i < 7; i++) {
-            bufferGraphics.drawLine((int) sEng.x0.x + 20, (int) (sEng.x0.y + 5 + (2 * i + 1) * sprezyna), (int) sEng.x0.x - 20, (int) (sEng.x0.y + 5 + (2 * i + 2) * sprezyna));
-            bufferGraphics.drawLine((int) sEng.x0.x - 20, (int) (sEng.x0.y + 5 + (2 * i + 2) * sprezyna), (int) sEng.x0.x + 20, (int) (sEng.x0.y + 5 + (2 * i + 3) * sprezyna));
-        }
-        bufferGraphics.fillOval((int) sEng.x1.x - 40, (int) sEng.x1.y, 80, 80);
-
-        bufferGraphics.setColor(Color.yellow);
-        bufferGraphics.fillRect(100, 100, 40, 20);
-        bufferGraphics.drawString("Tłumienie", 150, 115);
-        bufferGraphics.drawLine((int) sEng.x1.x + 2, (int) sEng.x1.y + 40, (int) sEng.x1.x + 2, (int) sEng.x1.y + 40 + (int) sEng.getDump() * 4);
-
-        if (sEng.getV() > 2) {
-            bufferGraphics.drawLine((int) (int) sEng.x1.x + 7, (int) sEng.x1.y + 45 + (int) sEng.getDump() * 4, (int) sEng.x1.x + 2, (int) sEng.x1.y + 40 + (int) sEng.getDump() * 4);
-            bufferGraphics.drawLine((int) (int) sEng.x1.x - 3, (int) sEng.x1.y + 45 + (int) sEng.getDump() * 4, (int) sEng.x1.x + 2, (int) sEng.x1.y + 40 + (int) sEng.getDump() * 4);
-        } else if (sEng.getV() < -2) {
-            bufferGraphics.drawLine((int) (int) sEng.x1.x + 7, (int) sEng.x1.y + 35 + (int) sEng.getDump() * 4, (int) sEng.x1.x + 2, (int) sEng.x1.y + 40 + (int) sEng.getDump() * 4);
-            bufferGraphics.drawLine((int) (int) sEng.x1.x - 3, (int) sEng.x1.y + 35 + (int) sEng.getDump() * 4, (int) sEng.x1.x + 2, (int) sEng.x1.y + 40 + (int) sEng.getDump() * 4);
-        }
-        bufferGraphics.setColor(Color.red);
-        bufferGraphics.fillRect(100, 140, 40, 20);
-        bufferGraphics.drawString("Grawitacja", 150, 155);
-        bufferGraphics.drawLine((int) sEng.x1.x, (int) sEng.x1.y + 40, (int) sEng.x1.x, (int) sEng.x1.y + 40 + (int) sEng.getGrav() * 4);
-
-        if (sEng.getV() != 0) {
-            bufferGraphics.drawLine((int) sEng.x1.x, (int) sEng.x1.y + 40 + (int) sEng.getGrav() * 4, (int) sEng.x1.x - 5, (int) sEng.x1.y + 35 + (int) sEng.getGrav() * 4);
-            bufferGraphics.drawLine((int) sEng.x1.x, (int) sEng.x1.y + 40 + (int) sEng.getGrav() * 4, (int) sEng.x1.x + 5, (int) sEng.x1.y + 35 + (int) sEng.getGrav() * 4);
-        }
-        bufferGraphics.setColor(Color.green);
-        bufferGraphics.fillRect(100, 180, 40, 20);
-        bufferGraphics.drawString("Sprezyna", 150, 195);
-        bufferGraphics.drawLine((int) sEng.x1.x - 2, (int) sEng.x1.y + 40, (int) sEng.x1.x - 2, (int) sEng.x1.x + 40 + (int) sEng.getSpr() * 4);
-
-        if (sEng.getSpr() > 3) {
-            bufferGraphics.drawLine((int) sEng.x1.x - 2, (int) sEng.x1.y + 40 + (int) sEng.getSpr() * 4, (int) sEng.x1.x - 7, (int) sEng.x1.y + 35 + (int) sEng.getSpr() * 4);
-            bufferGraphics.drawLine((int) sEng.x1.x - 2, (int) sEng.x1.y + 40 + (int) sEng.getSpr() * 4, (int) sEng.x1.x + 3, (int) sEng.x1.y + 35 + (int) sEng.getSpr() * 4);
-        } else if (sEng.getSpr() < -3) {
-            bufferGraphics.drawLine((int) sEng.x1.x - 2, (int) sEng.x1.y + 40 + (int) sEng.getSpr() * 4, (int) sEng.x1.x - 7, (int) sEng.x1.y + 45 + (int) sEng.getSpr() * 4);
-            bufferGraphics.drawLine((int) sEng.x1.x - 2, (int) sEng.x1.y + 40 + (int) sEng.getSpr() * 4, (int) sEng.x1.x + 3, (int) sEng.x1.y + 45 + (int) sEng.getSpr() * 4);
-        }
-        g.drawImage(offscreen, 0, 0, this);
+    public void paint(Graphics g) {
+        g.clearRect(0, 0, 600, 600);
+        g.drawLine((int) simEngine.dajPkt_zaw().x, (int) simEngine.dajPkt_zaw().y, (int) simEngine.dajPol_masy().x, (int) simEngine.dajPol_masy().y);
+        g.drawLine((int) simEngine.dajPkt_zaw().x-20, (int) simEngine.dajPkt_zaw().y, (int) simEngine.dajPkt_zaw().x+20, (int) simEngine.dajPkt_zaw().y);
+        g.drawOval((int) simEngine.dajPol_masy().x - 10, (int) simEngine.dajPol_masy().y, 20, 20);
+        g.drawString("długość swobodna", 20, 15);
+        g.drawString("sprezystość", 140, 15);
+        g.drawString("tłumienie", 260, 15);
+        g.drawString("masa", 380, 15);
+        g.drawString("grawitacja", 500, 15);
     }
-
-    public void RysowanieLinii(Graphics g, Vector2D wektor){
-        double x = wektor.x;
-        double y = wektor.y;
-        //g.drawLine(getSize().width/2,getSize().height/2, getSize().width/2);
-
+    public void mouseDragged(MouseEvent a) {
+        if (mysz == true) {
+            simEngine.dajPol_masy().x = a.getX();
+            simEngine.dajPol_masy().y = a.getY();
+            this.repaint(); System.out.println(mysz);
+            a.consume(); }
     }
+    public void mousePressed(MouseEvent a) {
+        newx = a.getX();
+        newy = a.getY();
+        if (simEngine.dajPol_masy().x <= newx && newx <= simEngine.dajPol_masy().x+20 && simEngine.dajPol_masy().y<= newy && simEngine.dajPol_masy().y +20 >= newy) {
+            simTask.cancel();
+            mysz = true;
+            System.out.println(mysz);
+            a.consume();
+        }
+    }
+    public void mouseReleased(MouseEvent a) {
+        if (mysz == true) {
+            t = new Timer();
+            simTask = new SimTask(simEngine, this, 0.05);
+            t.scheduleAtFixedRate(simTask, currentDate.getTime(), 5);
+            mysz = false; a.consume(); System.out.println(mysz);
+        }
+    }
+    public void mouseMoved(MouseEvent arg0) { }
+    public void mouseClicked(MouseEvent arg0) { }
+    public void mouseEntered(MouseEvent arg0) { }
+    public void mouseExited(MouseEvent arg0) { }
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == reset) {
+            t.cancel();
+            double a =simEngine.dajPkt_zaw().y + Double.parseDouble(dlugoscSwobodna.getText());
+            Vector2D pomocniczy = new Vector2D(simEngine.dajPkt_zaw().x,a);
+            simEngine.ustawPol_masy(pomocniczy);
+            simEngine.ustawMase(Double.parseDouble(masa.getText()));
+            simEngine.ustawGrawitacje(Double.parseDouble(grawitacja.getText()));
 
+        simEngine.ustawWsp_spr(Double.parseDouble(sprezystosc.getText()));
+        simEngine.ustawWsp_tlum(Double.parseDouble(tlumienie.getText()));
+        simEngine.ustawDlug_swob(Double.parseDouble(dlugoscSwobodna.getText()));
+        repaint();
+        }
+    }
 }
+

@@ -1,19 +1,17 @@
 import java.util.TimerTask;
 
-public class SimTask extends TimerTask
-{
-    private SimEngine a;
-    public SpringApplet b;
-    private double t;
+public class SimTask extends TimerTask {
+    private SimEngine simEngine;
+    private SpringApplet springApplet;
+    private double czas;
 
-    SimTask(SimEngine E, SpringApplet S, double time) {
-        b = S;
-        a = E;
-        t = time; }
-
-    @Override public void run()
-    {
-        a.timeStep(t);
-        b.repaint();
+    public SimTask(SimEngine se, SpringApplet sa, double t) {
+        simEngine = se;
+        springApplet = sa;
+        czas = t;
+    }
+    public void run() {
+        simEngine.liczenieWektorow(czas);
+        springApplet.repaint();
     }
 }

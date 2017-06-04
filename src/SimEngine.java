@@ -1,107 +1,90 @@
-
 public class SimEngine {
+    private double masa;
+    private double wsp_spr;
+    private double wsp_tlum;
+    private double dlug_swob;
+    private Vector2D pol_masy;
+    private Vector2D pred_masy;
+    private Vector2D pkt_zaw;
+    private double grawitacja;
 
-    private double m;
-    private double k;
-    private double c;
-    private double length;
-
-    public Vector2D x1;
-    public Vector2D x0;
-
-    private double g;
-    private double tempX;
-    private double v;
-    private double a;
-    private Vector2D grawitacja;
-    private Vector2D tlumienie;
-    private Vector2D sprezystosc;
-
-    public void modMasa(double m) {
-        this.m = m; }
-    public void ModK(double k) {
-        this.k = k; }
-    public void modC(double c) {
-        this.c = c; }
-    public void moddlugosc(double length) {
-        this.length = length; }
-    public void modx1 (double x1) {
-        x1 = x1; }
-    public void modx0(double x0) {
-        x0 = x0; }
-    public void modg(double g) {
-        this.g = g; }
-
-    public double getDump(){
-        double c = this.c;
-        double v = this.v;
-        double m = this.m;
-        double tlumienie = c * v * m;
-        return tlumienie;}
-    public double getSpr() {
-        double m = this.m;
-        double a = this.a;
-        double k = this.k;
-        double sprezystosc = k * m *a;
-        return sprezystosc;}
-    public double getGrav() {
-        double m = this.m;
-        double g = this.g;
-        double grawitacja = m * g;
-        return grawitacja;}
-    public double getV() {
-        return this.v;}
-
-    public double getMasa() {
-        return this.m;}
-    public double getK() {
-        return this.k;}
-    public double getC() {
-        return this.c;}
-    public double getlength() {
-        return this.length;}
-    public double getx1() {
-        double x1 = 0.0;
-        return x1;}
-    public double getx0() {
-        double x0 = 0.0;
-        return x0;}
-    public double getg() {
-        return this.g;}
-
-    public SimEngine(double m, double k, double c, double length,
-                     double x1, double x0, double g) {
-        this.m = m;
-        this.k = k;
-        this.c = c;
-        this.length = length;
-        this.x1 = new Vector2D(400, x1);
-        this.x0 = new Vector2D(400, x0);
-        this.g = g;
-        v = 0;
-        tempX = 0;
-        a = 0;
-        grawitacja = new Vector2D(0, 0);
-        tlumienie = new Vector2D(0, 0);
-        sprezystosc = new Vector2D(0, 0);
+    public SimEngine(double mm, double kk, double cc, double LL0, double gg,Vector2D yy, Vector2D vv, Vector2D yy00) {
+        if( (mm<0) || (kk<0) || (cc<0) || (LL0<0) || (gg<0) )
+            System.out.println("Złe dane wejściowe!");
+        else
+            masa = mm;
+        wsp_spr = kk;
+        wsp_tlum = cc;
+        dlug_swob = LL0;
+        grawitacja = gg;
+        pol_masy = yy;
+        pred_masy = vv;
+        pkt_zaw = yy00;
     }
-    public void timeStep(double t) {
-        grawitacja.y = m*g;
-        grawitacja.x = 400;
-        tlumienie.y = -v*c;
-        tlumienie.x = 400;
-        sprezystosc.y = -(x1.y-(length + x0.y))*k;
-        sprezystosc.x = 400;
-        a = (grawitacja.y + tlumienie.y +sprezystosc.y)/m;
-        v = v + a*t;
-        tempX = v*t;
-        x1.y = x1.y + tempX;
-    }
-    public void reset() {
-        v=0;
-        a=0;
+    public double dajMase() {
+        return masa;
+    } public double
+    dajWsp_spr() {
+        return wsp_spr;
+    } public double
+    dajWsp_tlum() {
+        return wsp_tlum;
+    } public
+
+    double dajDlug_swob() {
+        return dlug_swob;
     }
 
+    public Vector2D dajPol_masy() {
+        return pol_masy;
+    }
+    public Vector2D dajPred_masy() {
+        return pred_masy;
+    }
+    public Vector2D dajPkt_zaw() {
+        return pkt_zaw;
+    }
+    public double dajGrawitacje() {
+        return grawitacja;
+    }
+    void ustawPol_masy(Vector2D pMasy) {
+        pol_masy=pMasy;
+    }
+    void ustawPkt_zaw(Vector2D pktZaw) {
+        pkt_zaw = pktZaw;
+    }
+    void ustawPred_masy(Vector2D predMasy) {
+        pred_masy=predMasy;
+    }
+    void ustawWsp_tlum(double wspTlum) {
+        wsp_tlum = wspTlum;
+    }
+    void ustawMase(double m) {
+        masa = m;
+    }
+    void ustawWsp_spr(double wspSpr) {
+        if (wspSpr < 0)
+            wsp_spr = 0;
+        else
+            wsp_spr = wspSpr;
+    }
+    void ustawDlug_swob(double dlugSwob) {
+        if (dlugSwob < 0)
+            dlug_swob = 0;
+        else dlug_swob = dlugSwob;
+    }
+    void ustawGrawitacje(double graw){
+        grawitacja=graw;
+    }
+    public void liczenieWektorow(double timestep) {
+        Vector2D silaGrawitacji = new Vector2D(0, masa*grawitacja);
+        Vector2D silaSprezystosci = new Vector2D();
+        Vector2D silaTlumienia = new Vector2D();
 
-
+        silaSprezystosci = pkt_zaw.RoznicaWektorowa(dajPol_masy()).NormalizacjaWektora(). MnozenieWektora ((int) (wsp_spr*(pol_masy.RoznicaWektorowa(dajPkt_zaw()).DlugoscWektora()-dajDlug_swob()))); silaTlumienia = pred_masy.MnozenieWektora((int) -wsp_tlum);
+        Vector2D silaWypadkowa = new Vector2D();
+        silaWypadkowa = silaSprezystosci.SumaWektorowa(silaTlumienia).SumaWektorowa(silaGrawitacji);
+        pred_masy = pred_masy.SumaWektorowa(silaWypadkowa.MnozenieWektora((int) (timestep/masa)));
+        pol_masy = pol_masy.SumaWektorowa(pred_masy.MnozenieWektora((int) timestep));
+    }
 }
